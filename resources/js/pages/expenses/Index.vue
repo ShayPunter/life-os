@@ -68,6 +68,7 @@ const handleFileSelect = (event: Event) => {
 
     if (file) {
         receiptFile.value = file;
+        analysisError.value = null;
 
         // Only show preview for images, not PDFs
         if (file.type.startsWith('image/')) {
@@ -248,6 +249,10 @@ const getCategoryColor = (category: string | null) => {
     };
     return colors[category || ''] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
 };
+
+const canAnalyzeWithAI = computed(() => {
+    return receiptFile.value && receiptFile.value.type.startsWith('image/');
+});
 </script>
 
 <template>
@@ -285,7 +290,10 @@ const getCategoryColor = (category: string | null) => {
                             </div>
 
                             <div class="grid gap-2">
-                                <Label>Receipt Image or PDF (Optional)</Label>
+                                <Label>Receipt (Optional)</Label>
+                                <p class="text-sm text-muted-foreground">
+                                    Upload an image (JPEG, PNG, WebP) for AI analysis, or a PDF for manual entry
+                                </p>
                                 <div class="flex flex-col gap-2">
                                     <Input
                                         type="file"
@@ -297,7 +305,7 @@ const getCategoryColor = (category: string | null) => {
                                         type="button"
                                         variant="secondary"
                                         @click="handleAnalyzeReceipt"
-                                        :disabled="isAnalyzing"
+                                        :disabled="isAnalyzing || !canAnalyzeWithAI"
                                     >
                                         <Loader2 v-if="isAnalyzing" class="mr-2 size-4 animate-spin" />
                                         <Receipt v-else class="mr-2 size-4" />

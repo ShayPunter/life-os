@@ -30,8 +30,20 @@ class GroqService
             throw new \Exception('Image file not found');
         }
 
-        $imageData = base64_encode(file_get_contents($imagePath));
         $mimeType = mime_content_type($imagePath);
+
+        // Groq vision API only supports images, not PDFs
+        if ($mimeType === 'application/pdf') {
+            throw new \Exception('PDF analysis is not supported. Please use an image file (JPEG, PNG, WebP).');
+        }
+
+        // Check file size (Groq has a 4MB limit for base64 encoded images)
+        $fileSize = filesize($imagePath);
+        if ($fileSize > 3 * 1024 * 1024) { // 3MB to be safe with base64 overhead
+            throw new \Exception('Image file is too large. Maximum size is 3MB. Please use a smaller image.');
+        }
+
+        $imageData = base64_encode(file_get_contents($imagePath));
 
         try {
             $response = $this->client->post('https://api.groq.com/openai/v1/chat/completions', [
