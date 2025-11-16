@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { create, destroy } from '@/actions/App/Http/Controllers/DebtController';
+import { create, destroy, show } from '@/actions/App/Http/Controllers/DebtController';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,9 @@ interface Debt {
     due_date: string | null;
     is_paid: boolean;
     created_at: string;
+    total_paid: string;
+    remaining_balance: string;
+    payment_count: number;
 }
 
 interface Summary {
@@ -124,6 +127,11 @@ const formatCurrency = (amount: string) => {
                                 <CardDescription v-if="debt.description">
                                     {{ debt.description }}
                                 </CardDescription>
+                                <div v-if="debt.payment_count > 0" class="mt-2 text-sm text-muted-foreground">
+                                    {{ debt.payment_count }} payment{{ debt.payment_count !== 1 ? 's' : '' }} •
+                                    Paid: {{ formatCurrency(debt.total_paid) }} •
+                                    Remaining: {{ formatCurrency(debt.remaining_balance) }}
+                                </div>
                             </div>
                             <div class="text-right">
                                 <div class="text-2xl font-bold">
@@ -137,6 +145,9 @@ const formatCurrency = (amount: string) => {
                     </CardHeader>
                     <CardContent>
                         <div class="flex gap-2">
+                            <Link :href="show(debt.id)">
+                                <Button variant="default" size="sm">View</Button>
+                            </Link>
                             <Link :href="`/debts/${debt.id}/edit`">
                                 <Button variant="outline" size="sm">Edit</Button>
                             </Link>
