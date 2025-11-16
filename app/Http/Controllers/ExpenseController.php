@@ -125,36 +125,45 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Analyze a receipt image using Groq AI.
+     * Analyze a receipt using Groq AI.
      */
     public function analyzeReceipt(Request $request): JsonResponse
     {
         $request->validate([
-            'receipt' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'receipt' => ['required', 'file', 'mimes:jpeg,jpg,png,webp,pdf', 'max:5120'],
         ]);
 
         try {
             $file = $request->file('receipt');
+            $isPdf = $this->isPdf($file);
 
-            // Store temporarily for compression
+            // Store temporarily
             $tempUploadPath = $file->store('temp', 'local');
             $tempUploadFullPath = Storage::disk('local')->path($tempUploadPath);
 
-            // Compress the image
-            $tempCompressedPath = storage_path('app/temp/compressed_'.basename($tempUploadPath));
-            $this->compressionService->compress($tempUploadFullPath, $tempCompressedPath);
+            // Compress only if it's an image (not PDF)
+            if ($isPdf) {
+                // Upload PDF directly without compression
+                $s3Path = $this->uploadToS3($tempUploadFullPath, $file->getClientOriginalExtension());
+            } else {
+                // Compress the image
+                $tempCompressedPath = storage_path('app/temp/compressed_'.basename($tempUploadPath));
+                $this->compressionService->compress($tempUploadFullPath, $tempCompressedPath);
 
-            // Upload to S3
-            $s3Path = $this->uploadToS3($tempCompressedPath, $file->getClientOriginalExtension());
+                // Upload to S3
+                $s3Path = $this->uploadToS3($tempCompressedPath, $file->getClientOriginalExtension());
+
+                // Clean up compressed file
+                if (file_exists($tempCompressedPath)) {
+                    unlink($tempCompressedPath);
+                }
+            }
 
             // Analyze using Groq
             $result = $this->groqService->analyzeReceiptFromS3($s3Path, $this->getStorageDisk());
 
             // Clean up temp files
             Storage::disk('local')->delete($tempUploadPath);
-            if (file_exists($tempCompressedPath)) {
-                unlink($tempCompressedPath);
-            }
 
             // Delete the S3 file after analysis (we'll upload again when saving)
             Storage::disk($this->getStorageDisk())->delete($s3Path);
@@ -188,26 +197,35 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Process and upload a receipt image.
+     * Process and upload a receipt file.
      */
     protected function processAndUploadReceipt(\Illuminate\Http\UploadedFile $file): string
     {
+        $isPdf = $this->isPdf($file);
+
         // Store temporarily
         $tempPath = $file->store('temp', 'local');
         $tempFullPath = Storage::disk('local')->path($tempPath);
 
-        // Compress the image
-        $tempCompressedPath = storage_path('app/temp/compressed_'.basename($tempPath));
-        $this->compressionService->compress($tempFullPath, $tempCompressedPath);
+        if ($isPdf) {
+            // Upload PDF directly without compression
+            $s3Path = $this->uploadToS3($tempFullPath, $file->getClientOriginalExtension());
+        } else {
+            // Compress the image
+            $tempCompressedPath = storage_path('app/temp/compressed_'.basename($tempPath));
+            $this->compressionService->compress($tempFullPath, $tempCompressedPath);
 
-        // Upload to S3
-        $s3Path = $this->uploadToS3($tempCompressedPath, $file->getClientOriginalExtension());
+            // Upload to S3
+            $s3Path = $this->uploadToS3($tempCompressedPath, $file->getClientOriginalExtension());
 
-        // Clean up temp files
-        Storage::disk('local')->delete($tempPath);
-        if (file_exists($tempCompressedPath)) {
-            unlink($tempCompressedPath);
+            // Clean up compressed file
+            if (file_exists($tempCompressedPath)) {
+                unlink($tempCompressedPath);
+            }
         }
+
+        // Clean up temp file
+        Storage::disk('local')->delete($tempPath);
 
         return $s3Path;
     }
@@ -239,5 +257,13 @@ class ExpenseController extends Controller
     protected function getStorageDisk(): string
     {
         return config('filesystems.default') === 's3' ? 's3' : 'public';
+    }
+
+    /**
+     * Check if the uploaded file is a PDF.
+     */
+    protected function isPdf(\Illuminate\Http\UploadedFile $file): bool
+    {
+        return $file->getMimeType() === 'application/pdf';
     }
 }

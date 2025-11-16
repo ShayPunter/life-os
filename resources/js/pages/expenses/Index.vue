@@ -65,11 +65,17 @@ const handleFileSelect = (event: Event) => {
 
     if (file) {
         receiptFile.value = file;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            receiptPreview.value = e.target?.result as string;
-        };
-        reader.readAsDataURL(file);
+
+        // Only show preview for images, not PDFs
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                receiptPreview.value = e.target?.result as string;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            receiptPreview.value = null;
+        }
     }
 };
 
@@ -241,11 +247,11 @@ const getCategoryColor = (category: string | null) => {
                             </div>
 
                             <div class="grid gap-2">
-                                <Label>Receipt Image (Optional)</Label>
+                                <Label>Receipt Image or PDF (Optional)</Label>
                                 <div class="flex flex-col gap-2">
                                     <Input
                                         type="file"
-                                        accept="image/*"
+                                        accept="image/*,application/pdf"
                                         @change="handleFileSelect"
                                     />
                                     <Button
@@ -260,8 +266,12 @@ const getCategoryColor = (category: string | null) => {
                                         {{ isAnalyzing ? 'Analyzing...' : 'Analyze with AI' }}
                                     </Button>
                                 </div>
-                                <div v-if="receiptPreview" class="mt-2">
-                                    <img :src="receiptPreview" alt="Receipt preview" class="max-h-48 rounded border" />
+                                <div v-if="receiptFile" class="mt-2">
+                                    <img v-if="receiptPreview" :src="receiptPreview" alt="Receipt preview" class="max-h-48 rounded border" />
+                                    <div v-else class="flex items-center gap-2 p-3 rounded border bg-muted">
+                                        <FileText class="size-5" />
+                                        <span class="text-sm">{{ receiptFile.name }}</span>
+                                    </div>
                                 </div>
                             </div>
 
