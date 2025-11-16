@@ -251,7 +251,9 @@ const getCategoryColor = (category: string | null) => {
 };
 
 const canAnalyzeWithAI = computed(() => {
-    return receiptFile.value && receiptFile.value.type.startsWith('image/');
+    if (!receiptFile.value) return false;
+    // AI analysis works with images and PDFs (PDFs are converted to images)
+    return receiptFile.value.type.startsWith('image/') || receiptFile.value.type === 'application/pdf';
 });
 </script>
 
@@ -292,7 +294,7 @@ const canAnalyzeWithAI = computed(() => {
                             <div class="grid gap-2">
                                 <Label>Receipt (Optional)</Label>
                                 <p class="text-sm text-muted-foreground">
-                                    Upload an image (JPEG, PNG, WebP) for AI analysis, or a PDF for manual entry
+                                    Upload an image or PDF for AI-powered expense analysis
                                 </p>
                                 <div class="flex flex-col gap-2">
                                     <Input

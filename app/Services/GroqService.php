@@ -32,11 +32,6 @@ class GroqService
 
         $mimeType = mime_content_type($imagePath);
 
-        // Groq vision API only supports images, not PDFs
-        if ($mimeType === 'application/pdf') {
-            throw new \Exception('PDF analysis is not supported. Please use an image file (JPEG, PNG, WebP).');
-        }
-
         // Check file size (Groq has a 4MB limit for base64 encoded images)
         $fileSize = filesize($imagePath);
         if ($fileSize > 3 * 1024 * 1024) { // 3MB to be safe with base64 overhead
