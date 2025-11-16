@@ -361,70 +361,85 @@ const formatCurrency = (amount: string | number) => {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div class="flex flex-col gap-4">
-                            <div v-if="asset.tracking_type === 'uses'" class="flex items-center justify-between p-4 rounded-lg border bg-muted/50">
-                                <div class="flex-1">
-                                    <div class="text-sm font-medium mb-1">Number of Uses</div>
-                                    <div class="text-2xl font-bold">{{ asset.uses }}</div>
-                                    <div v-if="asset.cost_per_use" class="text-sm text-muted-foreground mt-1">
-                                        {{ formatCurrency(asset.cost_per_use) }} per use
-                                    </div>
-                                    <div v-else class="text-sm text-muted-foreground mt-1">
-                                        Add uses to calculate cost per use
-                                    </div>
-                                </div>
-                                <div class="flex gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        @click="handleDecrementUses(asset)"
-                                        :disabled="asset.uses === 0"
-                                    >
-                                        <Minus class="size-4" />
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        @click="handleIncrementUses(asset)"
-                                    >
-                                        <Plus class="size-4" />
-                                    </Button>
-                                </div>
+                        <div class="flex flex-col gap-3">
+                            <!-- Tracking Table -->
+                            <div class="overflow-hidden rounded-lg border">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-muted/50">
+                                        <tr class="border-b">
+                                            <th class="px-3 py-2 text-left font-medium">Metric</th>
+                                            <th class="px-3 py-2 text-left font-medium">Count</th>
+                                            <th class="px-3 py-2 text-left font-medium">Cost/Unit</th>
+                                            <th class="px-3 py-2 text-right font-medium">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-if="asset.tracking_type === 'uses'" class="border-b last:border-0">
+                                            <td class="px-3 py-3">Uses</td>
+                                            <td class="px-3 py-3 font-semibold">{{ asset.uses }}</td>
+                                            <td class="px-3 py-3">
+                                                <span v-if="asset.cost_per_use">{{ formatCurrency(asset.cost_per_use) }}</span>
+                                                <span v-else class="text-muted-foreground">—</span>
+                                            </td>
+                                            <td class="px-3 py-3">
+                                                <div class="flex gap-1 justify-end">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        class="size-7"
+                                                        @click="handleDecrementUses(asset)"
+                                                        :disabled="asset.uses === 0"
+                                                    >
+                                                        <Minus class="size-3" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        class="size-7"
+                                                        @click="handleIncrementUses(asset)"
+                                                    >
+                                                        <Plus class="size-3" />
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr v-if="asset.tracking_type === 'hours'" class="border-b last:border-0">
+                                            <td class="px-3 py-3 flex items-center gap-1.5">
+                                                <Clock class="size-3.5" />
+                                                Hours
+                                            </td>
+                                            <td class="px-3 py-3 font-semibold">{{ asset.hours }}h</td>
+                                            <td class="px-3 py-3">
+                                                <span v-if="asset.cost_per_hour">{{ formatCurrency(asset.cost_per_hour) }}</span>
+                                                <span v-else class="text-muted-foreground">—</span>
+                                            </td>
+                                            <td class="px-3 py-3">
+                                                <div class="flex gap-1 justify-end">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        class="size-7"
+                                                        @click="handleDecrementHours(asset)"
+                                                        :disabled="parseFloat(asset.hours) < 0.5"
+                                                    >
+                                                        <Minus class="size-3" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        class="size-7"
+                                                        @click="handleIncrementHours(asset)"
+                                                    >
+                                                        <Plus class="size-3" />
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
 
-                            <div v-if="asset.tracking_type === 'hours'" class="flex items-center justify-between p-4 rounded-lg border bg-muted/50">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <Clock class="size-4" />
-                                        <div class="text-sm font-medium">Hours Played/Used</div>
-                                    </div>
-                                    <div class="text-2xl font-bold">{{ asset.hours }}h</div>
-                                    <div v-if="asset.cost_per_hour" class="text-sm text-muted-foreground mt-1">
-                                        {{ formatCurrency(asset.cost_per_hour) }} per hour
-                                    </div>
-                                    <div v-else class="text-sm text-muted-foreground mt-1">
-                                        Add hours to calculate cost per hour
-                                    </div>
-                                </div>
-                                <div class="flex gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        @click="handleDecrementHours(asset)"
-                                        :disabled="parseFloat(asset.hours) < 0.5"
-                                    >
-                                        <Minus class="size-4" />
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        @click="handleIncrementHours(asset)"
-                                    >
-                                        <Plus class="size-4" />
-                                    </Button>
-                                </div>
-                            </div>
-
+                            <!-- Action Buttons -->
                             <div class="flex gap-2">
                                 <Button
                                     variant="outline"
