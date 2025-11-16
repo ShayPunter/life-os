@@ -96,7 +96,7 @@ class CurrencyConversionService
      */
     public function getSupportedCurrencies(): array
     {
-        return ['GBP', 'EUR', 'CZK'];
+        return ['GBP', 'EUR', 'CZK', 'USD'];
     }
 
     /**

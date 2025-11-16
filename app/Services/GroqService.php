@@ -47,7 +47,7 @@ class GroqService
                             'content' => [
                                 [
                                     'type' => 'text',
-                                    'text' => 'Analyze this receipt image and extract the following information in JSON format: total amount (as a number), currency (the 3-letter ISO code: GBP, EUR, or CZK - look for £, €, Kč symbols or context clues), description (what was purchased - be brief, max 100 characters), and category (choose one from: Food, Transportation, Shopping, Utilities, Entertainment, Healthcare, Other). Return ONLY valid JSON with keys: amount, currency, description, category. Do not include any markdown formatting or code blocks.',
+                                    'text' => 'Analyze this receipt image and extract the following information in JSON format: total amount (as a number), currency (the 3-letter ISO code: GBP, EUR, CZK, or USD - look for £, €, Kč, $ symbols or context clues), description (what was purchased - be brief, max 100 characters), and category (choose one from: Food, Transportation, Shopping, Utilities, Entertainment, Healthcare, Other). Return ONLY valid JSON with keys: amount, currency, description, category. Do not include any markdown formatting or code blocks.',
                                 ],
                                 [
                                     'type' => 'image_url',
