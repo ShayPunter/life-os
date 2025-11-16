@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\CurrencyConversionService;
 use App\Services\GroqService;
 use App\Services\ImageCompressionService;
+use App\Services\PdfToImageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -347,6 +348,19 @@ class ExpenseControllerTest extends TestCase
 
         $user = User::factory()->create();
         $this->actingAs($user);
+
+        // Mock the PdfToImageService to bypass actual PDF conversion
+        $this->mock(PdfToImageService::class, function ($mock) {
+            $mock->shouldReceive('convertToJpeg')
+                ->once()
+                ->andReturnUsing(function ($pdfPath, $outputPath) {
+                    // Create a fake converted image file so the controller can continue processing
+                    $fakeImage = UploadedFile::fake()->image('converted.jpg');
+                    copy($fakeImage->getPathname(), $outputPath);
+
+                    return true;
+                });
+        });
 
         // Mock the GroqService
         $this->mock(GroqService::class, function ($mock) {

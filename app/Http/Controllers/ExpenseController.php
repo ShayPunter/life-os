@@ -8,6 +8,7 @@ use App\Models\Expense;
 use App\Services\CurrencyConversionService;
 use App\Services\GroqService;
 use App\Services\ImageCompressionService;
+use App\Services\PdfToImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,7 @@ class ExpenseController extends Controller
         protected GroqService $groqService,
         protected ImageCompressionService $compressionService,
         protected CurrencyConversionService $currencyService,
+        protected PdfToImageService $pdfToImageService,
     ) {}
 
     /**
@@ -143,22 +145,31 @@ class ExpenseController extends Controller
             $tempUploadPath = $file->store('temp', 'local');
             $tempUploadFullPath = Storage::disk('local')->path($tempUploadPath);
 
-            // Compress only if it's an image (not PDF)
+            // Convert PDF to image if needed
             if ($isPdf) {
-                // Upload PDF directly without compression
-                $s3Path = $this->uploadToS3($tempUploadFullPath, $file->getClientOriginalExtension());
-            } else {
-                // Compress the image
-                $tempCompressedPath = storage_path('app/temp/compressed_'.basename($tempUploadPath));
-                $this->compressionService->compress($tempUploadFullPath, $tempCompressedPath);
+                $pdfConvertedPath = storage_path('app/temp/converted_'.pathinfo($tempUploadPath, PATHINFO_FILENAME).'.jpg');
 
-                // Upload to S3
-                $s3Path = $this->uploadToS3($tempCompressedPath, $file->getClientOriginalExtension());
-
-                // Clean up compressed file
-                if (file_exists($tempCompressedPath)) {
-                    unlink($tempCompressedPath);
+                if (! $this->pdfToImageService->convertToJpeg($tempUploadFullPath, $pdfConvertedPath)) {
+                    throw new \Exception('PDF conversion not available. Please upload an image file (JPEG, PNG, WebP) or install Ghostscript/Imagick for PDF support.');
                 }
+
+                // Use the converted image path
+                $tempUploadFullPath = $pdfConvertedPath;
+            }
+
+            // Compress the image (whether original or converted from PDF)
+            $tempCompressedPath = storage_path('app/temp/compressed_'.basename($tempUploadFullPath));
+            $this->compressionService->compress($tempUploadFullPath, $tempCompressedPath);
+
+            // Upload to S3
+            $s3Path = $this->uploadToS3($tempCompressedPath, 'jpg');
+
+            // Clean up temp files
+            if (file_exists($tempCompressedPath)) {
+                unlink($tempCompressedPath);
+            }
+            if ($isPdf && isset($pdfConvertedPath) && file_exists($pdfConvertedPath)) {
+                unlink($pdfConvertedPath);
             }
 
             // Analyze using Groq
@@ -195,6 +206,9 @@ class ExpenseController extends Controller
             }
             if (isset($tempCompressedPath) && file_exists($tempCompressedPath)) {
                 unlink($tempCompressedPath);
+            }
+            if (isset($pdfConvertedPath) && file_exists($pdfConvertedPath)) {
+                unlink($pdfConvertedPath);
             }
             if (isset($s3Path)) {
                 Storage::disk($this->getStorageDisk())->delete($s3Path);
