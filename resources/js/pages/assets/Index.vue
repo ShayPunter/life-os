@@ -335,132 +335,123 @@ const formatCurrency = (amount: string | number) => {
                 </Button>
             </div>
 
-            <div v-else class="grid gap-4">
-                <Card
-                    v-for="asset in assets"
-                    :key="asset.id"
-                >
-                    <CardHeader>
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <CardTitle>{{ asset.name }}</CardTitle>
-                                <CardDescription v-if="asset.description">
+            <div v-else class="overflow-hidden rounded-lg border">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted/50">
+                        <tr class="border-b">
+                            <th class="px-4 py-3 text-left font-medium">Asset</th>
+                            <th class="px-4 py-3 text-left font-medium">Cost</th>
+                            <th class="px-4 py-3 text-left font-medium">Purchased</th>
+                            <th class="px-4 py-3 text-left font-medium">Metric</th>
+                            <th class="px-4 py-3 text-left font-medium">Count</th>
+                            <th class="px-4 py-3 text-left font-medium">Cost/Unit</th>
+                            <th class="px-4 py-3 text-right font-medium">Tracking</th>
+                            <th class="px-4 py-3 text-right font-medium">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            v-for="asset in assets"
+                            :key="asset.id"
+                            class="border-b last:border-0 hover:bg-muted/50"
+                        >
+                            <td class="px-4 py-3">
+                                <div class="font-semibold">{{ asset.name }}</div>
+                                <div v-if="asset.description" class="text-xs text-muted-foreground mt-0.5">
                                     {{ asset.description }}
-                                </CardDescription>
-                                <div class="mt-2 space-y-1 text-sm">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-medium">Cost:</span>
-                                        <span>{{ formatCurrency(asset.cost) }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-medium">Purchased:</span>
-                                        <span class="text-muted-foreground">{{ asset.purchased_at }}</span>
-                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div class="flex flex-col gap-3">
-                            <!-- Tracking Table -->
-                            <div class="overflow-hidden rounded-lg border">
-                                <table class="w-full text-sm">
-                                    <thead class="bg-muted/50">
-                                        <tr class="border-b">
-                                            <th class="px-3 py-2 text-left font-medium">Metric</th>
-                                            <th class="px-3 py-2 text-left font-medium">Count</th>
-                                            <th class="px-3 py-2 text-left font-medium">Cost/Unit</th>
-                                            <th class="px-3 py-2 text-right font-medium">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr v-if="asset.tracking_type === 'uses'" class="border-b last:border-0">
-                                            <td class="px-3 py-3">Uses</td>
-                                            <td class="px-3 py-3 font-semibold">{{ asset.uses }}</td>
-                                            <td class="px-3 py-3">
-                                                <span v-if="asset.cost_per_use">{{ formatCurrency(asset.cost_per_use) }}</span>
-                                                <span v-else class="text-muted-foreground">—</span>
-                                            </td>
-                                            <td class="px-3 py-3">
-                                                <div class="flex gap-1 justify-end">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        class="size-7"
-                                                        @click="handleDecrementUses(asset)"
-                                                        :disabled="asset.uses === 0"
-                                                    >
-                                                        <Minus class="size-3" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        class="size-7"
-                                                        @click="handleIncrementUses(asset)"
-                                                    >
-                                                        <Plus class="size-3" />
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr v-if="asset.tracking_type === 'hours'" class="border-b last:border-0">
-                                            <td class="px-3 py-3 flex items-center gap-1.5">
-                                                <Clock class="size-3.5" />
-                                                Hours
-                                            </td>
-                                            <td class="px-3 py-3 font-semibold">{{ asset.hours }}h</td>
-                                            <td class="px-3 py-3">
-                                                <span v-if="asset.cost_per_hour">{{ formatCurrency(asset.cost_per_hour) }}</span>
-                                                <span v-else class="text-muted-foreground">—</span>
-                                            </td>
-                                            <td class="px-3 py-3">
-                                                <div class="flex gap-1 justify-end">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        class="size-7"
-                                                        @click="handleDecrementHours(asset)"
-                                                        :disabled="parseFloat(asset.hours) < 0.5"
-                                                    >
-                                                        <Minus class="size-3" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        class="size-7"
-                                                        @click="handleIncrementHours(asset)"
-                                                    >
-                                                        <Plus class="size-3" />
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Action Buttons -->
-                            <div class="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    @click="openEditDialog(asset)"
-                                >
-                                    <Edit class="mr-2 size-4" />
-                                    Edit
-                                </Button>
-                                <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    @click="handleDelete(asset.id)"
-                                >
-                                    <Trash2 class="mr-2 size-4" />
-                                    Delete
-                                </Button>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                {{ formatCurrency(asset.cost) }}
+                            </td>
+                            <td class="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                                {{ asset.purchased_at }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <div v-if="asset.tracking_type === 'uses'">Uses</div>
+                                <div v-else class="flex items-center gap-1.5">
+                                    <Clock class="size-3.5" />
+                                    Hours
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 font-semibold whitespace-nowrap">
+                                <span v-if="asset.tracking_type === 'uses'">{{ asset.uses }}</span>
+                                <span v-else>{{ asset.hours }}h</span>
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span v-if="asset.tracking_type === 'uses' && asset.cost_per_use">
+                                    {{ formatCurrency(asset.cost_per_use) }}
+                                </span>
+                                <span v-else-if="asset.tracking_type === 'hours' && asset.cost_per_hour">
+                                    {{ formatCurrency(asset.cost_per_hour) }}
+                                </span>
+                                <span v-else class="text-muted-foreground">—</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex gap-1 justify-end">
+                                    <Button
+                                        v-if="asset.tracking_type === 'uses'"
+                                        variant="outline"
+                                        size="icon"
+                                        class="size-7"
+                                        @click="handleDecrementUses(asset)"
+                                        :disabled="asset.uses === 0"
+                                    >
+                                        <Minus class="size-3" />
+                                    </Button>
+                                    <Button
+                                        v-if="asset.tracking_type === 'hours'"
+                                        variant="outline"
+                                        size="icon"
+                                        class="size-7"
+                                        @click="handleDecrementHours(asset)"
+                                        :disabled="parseFloat(asset.hours) < 0.5"
+                                    >
+                                        <Minus class="size-3" />
+                                    </Button>
+                                    <Button
+                                        v-if="asset.tracking_type === 'uses'"
+                                        variant="outline"
+                                        size="icon"
+                                        class="size-7"
+                                        @click="handleIncrementUses(asset)"
+                                    >
+                                        <Plus class="size-3" />
+                                    </Button>
+                                    <Button
+                                        v-if="asset.tracking_type === 'hours'"
+                                        variant="outline"
+                                        size="icon"
+                                        class="size-7"
+                                        @click="handleIncrementHours(asset)"
+                                    >
+                                        <Plus class="size-3" />
+                                    </Button>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex gap-1 justify-end">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        class="size-7"
+                                        @click="openEditDialog(asset)"
+                                    >
+                                        <Edit class="size-3" />
+                                    </Button>
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        class="size-7"
+                                        @click="handleDelete(asset.id)"
+                                    >
+                                        <Trash2 class="size-3" />
+                                    </Button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
