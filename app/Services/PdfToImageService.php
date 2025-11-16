@@ -28,7 +28,9 @@ class PdfToImageService
 
         try {
             $pdf = new Pdf($pdfPath);
-            $pageCount = $pdf->pageCount();
+
+            // Get page count using a compatible method
+            $pageCount = $this->getPageCount($pdfPath);
 
             // If single page, convert directly
             if ($pageCount === 1) {
@@ -56,13 +58,19 @@ class PdfToImageService
             $pageImages = [];
             for ($page = 1; $page <= $pageCount; $page++) {
                 $pagePath = $tempDir.'/page_'.$page.'.jpg';
-                $pdf->setPage($page)
-                    ->setOutputFormat('jpg')
-                    ->setCompressionQuality(85)
-                    ->saveImage($pagePath);
 
-                if (file_exists($pagePath)) {
-                    $pageImages[] = $pagePath;
+                try {
+                    $pdf->setPage($page)
+                        ->setOutputFormat('jpg')
+                        ->setCompressionQuality(85)
+                        ->saveImage($pagePath);
+
+                    if (file_exists($pagePath)) {
+                        $pageImages[] = $pagePath;
+                    }
+                } catch (\Exception $e) {
+                    // Page doesn't exist, we've reached the end
+                    break;
                 }
             }
 
@@ -200,6 +208,37 @@ class PdfToImageService
 
             return false;
         }
+    }
+
+    /**
+     * Get the number of pages in a PDF.
+     */
+    protected function getPageCount(string $pdfPath): int
+    {
+        // Try using Ghostscript first
+        exec("gs -q -dNODISPLAY -c '({$pdfPath}) (r) file runpdfbegin pdfpagecount = quit' 2>&1", $output, $returnCode);
+
+        if ($returnCode === 0 && ! empty($output) && is_numeric($output[0])) {
+            return (int) $output[0];
+        }
+
+        // Fallback: try using Imagick if available
+        if (extension_loaded('imagick')) {
+            try {
+                $imagick = new \Imagick($pdfPath);
+                $pageCount = $imagick->getNumberImages();
+                $imagick->destroy();
+
+                return $pageCount;
+            } catch (\Exception $e) {
+                Log::error('Failed to get page count with Imagick: '.$e->getMessage());
+            }
+        }
+
+        // Default to 1 if we can't determine the page count
+        Log::warning('Could not determine PDF page count, assuming single page');
+
+        return 1;
     }
 
     /**
