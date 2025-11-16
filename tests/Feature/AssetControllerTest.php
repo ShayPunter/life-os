@@ -349,4 +349,94 @@ class AssetControllerTest extends TestCase
             $response->assertRedirect(route('assets.index'));
         }
     }
+
+    public function test_users_can_increment_hours(): void
+    {
+        $user = User::factory()->create();
+        $asset = Asset::factory()->create([
+            'user_id' => $user->id,
+            'hours' => 5.0,
+        ]);
+        $this->actingAs($user);
+
+        $response = $this->post(route('assets.increment-hours', $asset));
+        $response->assertStatus(302);
+
+        $this->assertDatabaseHas('assets', [
+            'id' => $asset->id,
+            'hours' => 5.5,
+        ]);
+    }
+
+    public function test_users_can_decrement_hours(): void
+    {
+        $user = User::factory()->create();
+        $asset = Asset::factory()->create([
+            'user_id' => $user->id,
+            'hours' => 5.0,
+        ]);
+        $this->actingAs($user);
+
+        $response = $this->post(route('assets.decrement-hours', $asset));
+        $response->assertStatus(302);
+
+        $this->assertDatabaseHas('assets', [
+            'id' => $asset->id,
+            'hours' => 4.5,
+        ]);
+    }
+
+    public function test_users_cannot_decrement_hours_below_zero(): void
+    {
+        $user = User::factory()->create();
+        $asset = Asset::factory()->create([
+            'user_id' => $user->id,
+            'hours' => 0.0,
+        ]);
+        $this->actingAs($user);
+
+        $response = $this->post(route('assets.decrement-hours', $asset));
+        $response->assertStatus(302);
+
+        $this->assertDatabaseHas('assets', [
+            'id' => $asset->id,
+            'hours' => 0.0,
+        ]);
+    }
+
+    public function test_users_cannot_increment_other_users_asset_hours(): void
+    {
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
+        $asset = Asset::factory()->create(['user_id' => $user2->id]);
+
+        $this->actingAs($user1);
+
+        $response = $this->post(route('assets.increment-hours', $asset));
+        $response->assertStatus(403);
+    }
+
+    public function test_cost_per_hour_calculation_is_correct(): void
+    {
+        $user = User::factory()->create();
+        $asset = Asset::factory()->create([
+            'user_id' => $user->id,
+            'cost' => 60.00,
+            'hours' => 10.0,
+        ]);
+
+        $this->assertEquals(6.00, $asset->costPerHour());
+    }
+
+    public function test_cost_per_hour_is_null_when_hours_is_zero(): void
+    {
+        $user = User::factory()->create();
+        $asset = Asset::factory()->create([
+            'user_id' => $user->id,
+            'cost' => 100.00,
+            'hours' => 0.0,
+        ]);
+
+        $this->assertNull($asset->costPerHour());
+    }
 }

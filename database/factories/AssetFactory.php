@@ -38,6 +38,7 @@ class AssetFactory extends Factory
             'original_currency' => null,
             'exchange_rate' => null,
             'uses' => $this->faker->numberBetween(0, 100),
+            'hours' => $this->faker->randomFloat(2, 0, 200),
             'purchased_at' => $this->faker->dateTimeBetween('-2 years', 'now'),
         ];
     }

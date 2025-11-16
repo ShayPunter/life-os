@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { destroy, store, update, incrementUses, decrementUses } from '@/actions/App/Http/Controllers/AssetController';
+import { destroy, store, update, incrementUses, decrementUses, incrementHours, decrementHours } from '@/actions/App/Http/Controllers/AssetController';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import type { BreadcrumbItem } from '@/types';
 import { ref } from 'vue';
-import { Package, Trash2, Edit, Plus, Minus } from 'lucide-vue-next';
+import { Package, Trash2, Edit, Plus, Minus, Clock } from 'lucide-vue-next';
 
 interface Asset {
     id: number;
@@ -18,7 +18,9 @@ interface Asset {
     description: string | null;
     cost: string;
     uses: number;
+    hours: string;
     cost_per_use: number | null;
+    cost_per_hour: number | null;
     purchased_at: string;
     created_at: string;
 }
@@ -27,6 +29,7 @@ interface Summary {
     total_cost: string;
     count: number;
     total_uses: number;
+    total_hours: string;
 }
 
 interface Props {
@@ -117,6 +120,16 @@ const handleIncrementUses = (asset: Asset) => {
 const handleDecrementUses = (asset: Asset) => {
     if (asset.uses > 0) {
         router.post(decrementUses(asset.id));
+    }
+};
+
+const handleIncrementHours = (asset: Asset) => {
+    router.post(incrementHours(asset.id));
+};
+
+const handleDecrementHours = (asset: Asset) => {
+    if (parseFloat(asset.hours) >= 0.5) {
+        router.post(decrementHours(asset.id));
     }
 };
 
@@ -252,7 +265,7 @@ const formatCurrency = (amount: string | number) => {
                 </Dialog>
             </div>
 
-            <div class="grid gap-4 md:grid-cols-3">
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
                     <CardHeader>
                         <CardTitle>Total Investment</CardTitle>
@@ -276,6 +289,18 @@ const formatCurrency = (amount: string | number) => {
                     <CardContent>
                         <div class="text-2xl font-bold">
                             {{ summary.total_uses }}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Total Hours</CardTitle>
+                        <CardDescription>Across all assets</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div class="text-2xl font-bold">
+                            {{ summary.total_hours }}h
                         </div>
                     </CardContent>
                 </Card>
@@ -340,6 +365,39 @@ const formatCurrency = (amount: string | number) => {
                                         variant="outline"
                                         size="icon"
                                         @click="handleIncrementUses(asset)"
+                                    >
+                                        <Plus class="size-4" />
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 rounded-lg border bg-muted/50">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <Clock class="size-4" />
+                                        <div class="text-sm font-medium">Hours Played/Used</div>
+                                    </div>
+                                    <div class="text-2xl font-bold">{{ asset.hours }}h</div>
+                                    <div v-if="asset.cost_per_hour" class="text-sm text-muted-foreground mt-1">
+                                        {{ formatCurrency(asset.cost_per_hour) }} per hour
+                                    </div>
+                                    <div v-else class="text-sm text-muted-foreground mt-1">
+                                        Add hours to calculate cost per hour
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        @click="handleDecrementHours(asset)"
+                                        :disabled="parseFloat(asset.hours) < 0.5"
+                                    >
+                                        <Minus class="size-4" />
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        @click="handleIncrementHours(asset)"
                                     >
                                         <Plus class="size-4" />
                                     </Button>
