@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { edit, destroy as destroyDebt } from '@/actions/App/Http/Controllers/DebtController';
 import { store as storePayment, destroy as destroyPayment } from '@/actions/App/Http/Controllers/PaymentController';
 import { index } from '@/routes/debts';
@@ -58,15 +58,19 @@ const breadcrumbs: BreadcrumbItem[] = [
 const showPaymentForm = ref(false);
 
 const handleDeleteDebt = () => {
-    if (confirm('Are you sure you want to delete this debt? All associated payments will also be deleted.')) {
-        destroyDebt.delete(props.debt.id);
+    if (!confirm('Are you sure you want to delete this debt? All associated payments will also be deleted.')) {
+        return;
     }
+
+    router.delete(destroyDebt.url(props.debt.id));
 };
 
 const handleDeletePayment = (paymentId: number) => {
-    if (confirm('Are you sure you want to delete this payment?')) {
-        destroyPayment.delete(props.debt.id, paymentId);
+    if (!confirm('Are you sure you want to delete this payment?')) {
+        return;
     }
+
+    router.delete(destroyPayment.url(props.debt.id, paymentId));
 };
 
 const formatCurrency = (amount: string) => {
