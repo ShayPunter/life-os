@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import type { BreadcrumbItem } from '@/types';
 import { ref } from 'vue';
@@ -203,17 +202,16 @@ const formatCurrency = (amount: string | number) => {
 
                             <div class="grid gap-2">
                                 <Label for="currency">Currency *</Label>
-                                <Select v-model="formData.original_currency">
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select currency" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="EUR">EUR (€)</SelectItem>
-                                        <SelectItem value="GBP">GBP (£)</SelectItem>
-                                        <SelectItem value="USD">USD ($)</SelectItem>
-                                        <SelectItem value="CZK">CZK (Kč)</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <select
+                                    id="currency"
+                                    v-model="formData.original_currency"
+                                    class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                                >
+                                    <option value="EUR">EUR (€)</option>
+                                    <option value="GBP">GBP (£)</option>
+                                    <option value="USD">USD ($)</option>
+                                    <option value="CZK">CZK (Kč)</option>
+                                </select>
                             </div>
 
                             <div class="grid gap-2">
@@ -405,17 +403,16 @@ const formatCurrency = (amount: string | number) => {
 
                     <div class="grid gap-2">
                         <Label for="edit-currency">Currency *</Label>
-                        <Select v-model="formData.original_currency">
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select currency" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="EUR">EUR (€)</SelectItem>
-                                <SelectItem value="GBP">GBP (£)</SelectItem>
-                                <SelectItem value="USD">USD ($)</SelectItem>
-                                <SelectItem value="CZK">CZK (Kč)</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <select
+                            id="edit-currency"
+                            v-model="formData.original_currency"
+                            class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                        >
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="CZK">CZK (Kč)</option>
+                        </select>
                     </div>
 
                     <div class="grid gap-2">
