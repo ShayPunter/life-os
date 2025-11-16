@@ -36,6 +36,7 @@ class AssetControllerTest extends TestCase
             'name' => 'Gaming Laptop',
             'description' => 'High-end gaming laptop',
             'cost' => 1500.00,
+            'tracking_type' => 'uses',
             'purchased_at' => now()->format('Y-m-d'),
         ];
 
@@ -47,6 +48,7 @@ class AssetControllerTest extends TestCase
             'name' => 'Gaming Laptop',
             'description' => 'High-end gaming laptop',
             'cost' => 1500.00,
+            'tracking_type' => 'uses',
             'uses' => 0,
         ]);
     }
@@ -73,6 +75,7 @@ class AssetControllerTest extends TestCase
             'description' => 'Travel backpack',
             'original_cost' => 100.00,
             'original_currency' => 'GBP',
+            'tracking_type' => 'hours',
             'purchased_at' => now()->format('Y-m-d'),
         ];
 
@@ -86,6 +89,7 @@ class AssetControllerTest extends TestCase
             'original_cost' => 100.00,
             'original_currency' => 'GBP',
             'exchange_rate' => 1.17,
+            'tracking_type' => 'hours',
         ]);
     }
 
@@ -95,7 +99,7 @@ class AssetControllerTest extends TestCase
         $this->actingAs($user);
 
         $response = $this->post(route('assets.store'), []);
-        $response->assertSessionHasErrors(['name', 'cost', 'purchased_at']);
+        $response->assertSessionHasErrors(['name', 'cost', 'tracking_type', 'purchased_at']);
     }
 
     public function test_asset_cost_must_be_positive(): void
@@ -137,6 +141,7 @@ class AssetControllerTest extends TestCase
             'name' => 'Updated Name',
             'description' => 'Updated description',
             'cost' => 2000.00,
+            'tracking_type' => 'hours',
             'purchased_at' => now()->format('Y-m-d'),
         ];
 
@@ -148,6 +153,7 @@ class AssetControllerTest extends TestCase
             'name' => 'Updated Name',
             'description' => 'Updated description',
             'cost' => 2000.00,
+            'tracking_type' => 'hours',
         ]);
     }
 
@@ -162,6 +168,7 @@ class AssetControllerTest extends TestCase
         $response = $this->put(route('assets.update', $asset), [
             'name' => 'Hacked',
             'cost' => 999.99,
+            'tracking_type' => 'uses',
             'purchased_at' => now()->format('Y-m-d'),
         ]);
 
@@ -343,6 +350,7 @@ class AssetControllerTest extends TestCase
                 'name' => "Asset in {$currency}",
                 'original_cost' => 85.00,
                 'original_currency' => $currency,
+                'tracking_type' => 'uses',
                 'purchased_at' => now()->format('Y-m-d'),
             ]);
 

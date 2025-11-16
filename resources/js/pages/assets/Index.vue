@@ -19,6 +19,7 @@ interface Asset {
     cost: string;
     uses: number;
     hours: string;
+    tracking_type: 'uses' | 'hours';
     cost_per_use: number | null;
     cost_per_hour: number | null;
     purchased_at: string;
@@ -56,6 +57,7 @@ const formData = ref({
     cost: '',
     original_cost: '',
     original_currency: 'EUR',
+    tracking_type: 'uses' as 'uses' | 'hours',
     purchased_at: new Date().toISOString().split('T')[0],
 });
 
@@ -63,6 +65,7 @@ const handleSubmit = () => {
     const submitData: Record<string, string> = {
         name: formData.value.name,
         description: formData.value.description || '',
+        tracking_type: formData.value.tracking_type,
         purchased_at: formData.value.purchased_at,
     };
 
@@ -87,6 +90,7 @@ const handleUpdate = () => {
     const submitData: Record<string, string> = {
         name: formData.value.name,
         description: formData.value.description || '',
+        tracking_type: formData.value.tracking_type,
         purchased_at: formData.value.purchased_at,
         _method: 'PUT',
     };
@@ -141,6 +145,7 @@ const openEditDialog = (asset: Asset) => {
         cost: asset.cost,
         original_cost: asset.cost,
         original_currency: 'EUR',
+        tracking_type: asset.tracking_type,
         purchased_at: asset.purchased_at,
     };
     isEditAssetOpen.value = true;
@@ -153,6 +158,7 @@ const resetForm = () => {
         cost: '',
         original_cost: '',
         original_currency: 'EUR',
+        tracking_type: 'uses',
         purchased_at: new Date().toISOString().split('T')[0],
     };
 };
@@ -211,6 +217,21 @@ const formatCurrency = (amount: string | number) => {
                                     placeholder="Optional details about the asset"
                                     rows="3"
                                 />
+                            </div>
+
+                            <div class="grid gap-2">
+                                <Label for="tracking_type">Track By *</Label>
+                                <select
+                                    id="tracking_type"
+                                    v-model="formData.tracking_type"
+                                    class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                                >
+                                    <option value="uses">Number of Uses</option>
+                                    <option value="hours">Hours Played/Used</option>
+                                </select>
+                                <p class="text-sm text-muted-foreground">
+                                    Choose whether to track by number of uses or hours
+                                </p>
                             </div>
 
                             <div class="grid gap-2">
@@ -341,7 +362,7 @@ const formatCurrency = (amount: string | number) => {
                     </CardHeader>
                     <CardContent>
                         <div class="flex flex-col gap-4">
-                            <div class="flex items-center justify-between p-4 rounded-lg border bg-muted/50">
+                            <div v-if="asset.tracking_type === 'uses'" class="flex items-center justify-between p-4 rounded-lg border bg-muted/50">
                                 <div class="flex-1">
                                     <div class="text-sm font-medium mb-1">Number of Uses</div>
                                     <div class="text-2xl font-bold">{{ asset.uses }}</div>
@@ -371,7 +392,7 @@ const formatCurrency = (amount: string | number) => {
                                 </div>
                             </div>
 
-                            <div class="flex items-center justify-between p-4 rounded-lg border bg-muted/50">
+                            <div v-if="asset.tracking_type === 'hours'" class="flex items-center justify-between p-4 rounded-lg border bg-muted/50">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2 mb-1">
                                         <Clock class="size-4" />
@@ -457,6 +478,18 @@ const formatCurrency = (amount: string | number) => {
                             placeholder="Optional details about the asset"
                             rows="3"
                         />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="edit-tracking_type">Track By *</Label>
+                        <select
+                            id="edit-tracking_type"
+                            v-model="formData.tracking_type"
+                            class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                        >
+                            <option value="uses">Number of Uses</option>
+                            <option value="hours">Hours Played/Used</option>
+                        </select>
                     </div>
 
                     <div class="grid gap-2">
