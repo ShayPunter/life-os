@@ -92,12 +92,21 @@ const handleAnalyzeReceipt = async () => {
         const formDataToSend = new FormData();
         formDataToSend.append('receipt', receiptFile.value);
 
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        const headers: Record<string, string> = {
+            'Accept': 'application/json',
+        };
+
+        if (csrfToken) {
+            headers['X-CSRF-TOKEN'] = csrfToken;
+        }
+
         const response = await fetch('/expenses/analyze-receipt', {
             method: 'POST',
             body: formDataToSend,
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-            },
+            headers: headers,
+            credentials: 'same-origin',
         });
 
         const result = await response.json();
