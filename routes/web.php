@@ -14,4 +14,8 @@ Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('debts', App\Http\Controllers\DebtController::class);
+});
+
 require __DIR__.'/settings.php';
