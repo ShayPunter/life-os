@@ -353,7 +353,13 @@ class ExpenseControllerTest extends TestCase
         $this->mock(PdfToImageService::class, function ($mock) {
             $mock->shouldReceive('convertToJpeg')
                 ->once()
-                ->andReturn(true);
+                ->andReturnUsing(function ($pdfPath, $outputPath) {
+                    // Create a fake converted image file so the controller can continue processing
+                    $fakeImage = UploadedFile::fake()->image('converted.jpg');
+                    copy($fakeImage->getPathname(), $outputPath);
+
+                    return true;
+                });
         });
 
         // Mock the GroqService
