@@ -30,7 +30,19 @@ class GroqService
             throw new \Exception('Image file not found');
         }
 
+        // Detect mime type, with fallback based on file extension
         $mimeType = mime_content_type($imagePath);
+
+        if (! $mimeType || ! str_starts_with($mimeType, 'image/')) {
+            // Fallback: determine mime type from file extension
+            $extension = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
+            $mimeType = match ($extension) {
+                'jpg', 'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'webp' => 'image/webp',
+                default => throw new \Exception('Unsupported image format. Please use JPEG, PNG, or WebP.')
+            };
+        }
 
         // Check file size (Groq has a 4MB limit for base64 encoded images)
         $fileSize = filesize($imagePath);
@@ -38,7 +50,19 @@ class GroqService
             throw new \Exception('Image file is too large. Maximum size is 3MB. Please use a smaller image.');
         }
 
-        $imageData = base64_encode(file_get_contents($imagePath));
+        $fileContents = file_get_contents($imagePath);
+        if ($fileContents === false) {
+            throw new \Exception('Failed to read image file');
+        }
+
+        $imageData = base64_encode($fileContents);
+
+        if (empty($imageData)) {
+            throw new \Exception('Failed to encode image as base64');
+        }
+
+        // Construct the data URL
+        $dataUrl = "data:{$mimeType};base64,{$imageData}";
 
         try {
             $response = $this->client->post('https://api.groq.com/openai/v1/chat/completions', [
@@ -59,7 +83,7 @@ class GroqService
                                 [
                                     'type' => 'image_url',
                                     'image_url' => [
-                                        'url' => "data:{$mimeType};base64,{$imageData}",
+                                        'url' => $dataUrl,
                                     ],
                                 ],
                             ],
@@ -117,7 +141,17 @@ class GroqService
         try {
             // Download from S3
             $fileContents = Storage::disk($disk)->get($s3Path);
+
+            if (! $fileContents) {
+                throw new \Exception('Failed to download file from S3');
+            }
+
             file_put_contents($tempPath, $fileContents);
+
+            // Verify the file was written correctly
+            if (! file_exists($tempPath) || filesize($tempPath) === 0) {
+                throw new \Exception('Failed to write temporary file from S3 contents');
+            }
 
             // Analyze the image
             $result = $this->analyzeReceipt($tempPath);
