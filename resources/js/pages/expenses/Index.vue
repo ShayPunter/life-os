@@ -34,7 +34,7 @@ interface Props {
     summary: Summary;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -110,7 +110,7 @@ const handleAnalyzeReceipt = async () => {
         } else {
             analysisError.value = result.message || 'Failed to analyze receipt';
         }
-    } catch (error) {
+    } catch {
         analysisError.value = 'An error occurred while analyzing the receipt';
     } finally {
         isAnalyzing.value = false;
