@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Expense;
 use App\Models\User;
+use App\Services\CurrencyConversionService;
 use App\Services\GroqService;
 use App\Services\ImageCompressionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -295,9 +296,23 @@ class ExpenseControllerTest extends TestCase
             $mock->shouldReceive('analyzeReceiptFromS3')
                 ->once()
                 ->andReturn([
-                    'amount' => 45.99,
+                    'amount' => 50.00,
+                    'currency' => 'GBP',
                     'description' => 'Coffee and pastries',
                     'category' => 'Food',
+                ]);
+        });
+
+        // Mock the CurrencyConversionService
+        $this->mock(CurrencyConversionService::class, function ($mock) {
+            $mock->shouldReceive('convertToEur')
+                ->once()
+                ->with(50.00, 'GBP')
+                ->andReturn([
+                    'amount_eur' => 58.50,
+                    'original_amount' => 50.00,
+                    'original_currency' => 'GBP',
+                    'exchange_rate' => 1.17,
                 ]);
         });
 
@@ -314,7 +329,10 @@ class ExpenseControllerTest extends TestCase
         $response->assertJson([
             'success' => true,
             'data' => [
-                'amount' => 45.99,
+                'amount' => 58.50,
+                'original_amount' => 50.00,
+                'original_currency' => 'GBP',
+                'exchange_rate' => 1.17,
                 'description' => 'Coffee and pastries',
                 'category' => 'Food',
             ],
@@ -335,9 +353,23 @@ class ExpenseControllerTest extends TestCase
             $mock->shouldReceive('analyzeReceiptFromS3')
                 ->once()
                 ->andReturn([
-                    'amount' => 125.50,
+                    'amount' => 3000.00,
+                    'currency' => 'CZK',
                     'description' => 'Office supplies',
                     'category' => 'Shopping',
+                ]);
+        });
+
+        // Mock the CurrencyConversionService
+        $this->mock(CurrencyConversionService::class, function ($mock) {
+            $mock->shouldReceive('convertToEur')
+                ->once()
+                ->with(3000.00, 'CZK')
+                ->andReturn([
+                    'amount_eur' => 125.50,
+                    'original_amount' => 3000.00,
+                    'original_currency' => 'CZK',
+                    'exchange_rate' => 0.04183,
                 ]);
         });
 
@@ -352,6 +384,9 @@ class ExpenseControllerTest extends TestCase
             'success' => true,
             'data' => [
                 'amount' => 125.50,
+                'original_amount' => 3000.00,
+                'original_currency' => 'CZK',
+                'exchange_rate' => 0.04183,
                 'description' => 'Office supplies',
                 'category' => 'Shopping',
             ],

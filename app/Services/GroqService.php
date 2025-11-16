@@ -22,7 +22,7 @@ class GroqService
      * Analyze a receipt image and extract expense information.
      *
      * @param  string  $imagePath  Path to the receipt image
-     * @return array{amount: float, description: string, category: string}
+     * @return array{amount: float, currency: string, description: string, category: string}
      */
     public function analyzeReceipt(string $imagePath): array
     {
@@ -47,7 +47,7 @@ class GroqService
                             'content' => [
                                 [
                                     'type' => 'text',
-                                    'text' => 'Analyze this receipt image and extract the following information in JSON format: total amount (as a number), description (what was purchased - be brief, max 100 characters), and category (choose one from: Food, Transportation, Shopping, Utilities, Entertainment, Healthcare, Other). Return ONLY valid JSON with keys: amount, description, category. Do not include any markdown formatting or code blocks.',
+                                    'text' => 'Analyze this receipt image and extract the following information in JSON format: total amount (as a number), currency (the 3-letter ISO code: GBP, EUR, or CZK - look for £, €, Kč symbols or context clues), description (what was purchased - be brief, max 100 characters), and category (choose one from: Food, Transportation, Shopping, Utilities, Entertainment, Healthcare, Other). Return ONLY valid JSON with keys: amount, currency, description, category. Do not include any markdown formatting or code blocks.',
                                 ],
                                 [
                                     'type' => 'image_url',
@@ -79,6 +79,7 @@ class GroqService
 
             return [
                 'amount' => (float) $extracted['amount'],
+                'currency' => strtoupper($extracted['currency'] ?? 'EUR'),
                 'description' => $extracted['description'] ?? 'Unknown purchase',
                 'category' => $extracted['category'] ?? 'Other',
             ];
@@ -94,7 +95,7 @@ class GroqService
      *
      * @param  string  $s3Path  Path to the receipt image in S3
      * @param  string  $disk  The storage disk to use (default: 's3')
-     * @return array{amount: float, description: string, category: string}
+     * @return array{amount: float, currency: string, description: string, category: string}
      */
     public function analyzeReceiptFromS3(string $s3Path, string $disk = 's3'): array
     {

@@ -53,6 +53,9 @@ const editingExpense = ref<Expense | null>(null);
 
 const formData = ref({
     amount: '',
+    original_amount: '',
+    original_currency: '',
+    exchange_rate: '',
     description: '',
     category: '',
     date: new Date().toISOString().split('T')[0],
@@ -102,6 +105,9 @@ const handleAnalyzeReceipt = async () => {
         if (result.success) {
             formData.value = {
                 amount: result.data.amount.toString(),
+                original_amount: result.data.original_amount?.toString() || '',
+                original_currency: result.data.original_currency || '',
+                exchange_rate: result.data.exchange_rate?.toString() || '',
                 description: result.data.description,
                 category: result.data.category,
                 date: result.data.date,
@@ -124,6 +130,16 @@ const handleSubmit = () => {
     submitData.append('category', formData.value.category || '');
     submitData.append('date', formData.value.date);
 
+    if (formData.value.original_amount) {
+        submitData.append('original_amount', formData.value.original_amount);
+    }
+    if (formData.value.original_currency) {
+        submitData.append('original_currency', formData.value.original_currency);
+    }
+    if (formData.value.exchange_rate) {
+        submitData.append('exchange_rate', formData.value.exchange_rate);
+    }
+
     if (formData.value.receipt) {
         submitData.append('receipt', formData.value.receipt);
     }
@@ -145,6 +161,16 @@ const handleUpdate = () => {
     submitData.append('category', formData.value.category || '');
     submitData.append('date', formData.value.date);
     submitData.append('_method', 'PUT');
+
+    if (formData.value.original_amount) {
+        submitData.append('original_amount', formData.value.original_amount);
+    }
+    if (formData.value.original_currency) {
+        submitData.append('original_currency', formData.value.original_currency);
+    }
+    if (formData.value.exchange_rate) {
+        submitData.append('exchange_rate', formData.value.exchange_rate);
+    }
 
     if (formData.value.receipt) {
         submitData.append('receipt', formData.value.receipt);
@@ -182,6 +208,9 @@ const openEditDialog = (expense: Expense) => {
 const resetForm = () => {
     formData.value = {
         amount: '',
+        original_amount: '',
+        original_currency: '',
+        exchange_rate: '',
         description: '',
         category: '',
         date: new Date().toISOString().split('T')[0],
@@ -195,7 +224,7 @@ const resetForm = () => {
 const formatCurrency = (amount: string) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'USD',
+        currency: 'EUR',
     }).format(parseFloat(amount));
 };
 

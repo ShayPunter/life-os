@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreExpenseRequest;
 use App\Http\Requests\UpdateExpenseRequest;
 use App\Models\Expense;
+use App\Services\CurrencyConversionService;
 use App\Services\GroqService;
 use App\Services\ImageCompressionService;
 use Illuminate\Http\JsonResponse;
@@ -23,6 +24,7 @@ class ExpenseController extends Controller
     public function __construct(
         protected GroqService $groqService,
         protected ImageCompressionService $compressionService,
+        protected CurrencyConversionService $currencyService,
     ) {}
 
     /**
@@ -162,6 +164,12 @@ class ExpenseController extends Controller
             // Analyze using Groq
             $result = $this->groqService->analyzeReceiptFromS3($s3Path, $this->getStorageDisk());
 
+            // Convert currency to EUR
+            $converted = $this->currencyService->convertToEur(
+                $result['amount'],
+                $result['currency']
+            );
+
             // Clean up temp files
             Storage::disk('local')->delete($tempUploadPath);
 
@@ -171,7 +179,10 @@ class ExpenseController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'amount' => $result['amount'],
+                    'amount' => $converted['amount_eur'],
+                    'original_amount' => $converted['original_amount'],
+                    'original_currency' => $converted['original_currency'],
+                    'exchange_rate' => $converted['exchange_rate'],
                     'description' => $result['description'],
                     'category' => $result['category'],
                     'date' => now()->format('Y-m-d'),
