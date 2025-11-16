@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
+use Tinify\Source;
 use Tinify\Tinify;
 
 class ImageCompressionService
@@ -44,7 +45,7 @@ class ImageCompressionService
         }
 
         try {
-            $source = Tinify::fromFile($sourcePath);
+            $source = Source::fromFile($sourcePath);
             $source->toFile($destinationPath);
 
             Log::info('Image compressed successfully', [
