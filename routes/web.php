@@ -19,6 +19,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('expenses', App\Http\Controllers\ExpenseController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::post('expenses/analyze-receipt', [App\Http\Controllers\ExpenseController::class, 'analyzeReceipt'])->name('expenses.analyze-receipt');
     Route::resource('debts.payments', App\Http\Controllers\PaymentController::class);
+    Route::resource('assets', App\Http\Controllers\AssetController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::post('assets/{asset}/increment-uses', [App\Http\Controllers\AssetController::class, 'incrementUses'])->name('assets.increment-uses');
+    Route::post('assets/{asset}/decrement-uses', [App\Http\Controllers\AssetController::class, 'decrementUses'])->name('assets.decrement-uses');
 });
 
 require __DIR__.'/settings.php';
