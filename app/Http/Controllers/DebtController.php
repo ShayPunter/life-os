@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreDebtRequest;
 use App\Http\Requests\UpdateDebtRequest;
 use App\Models\Debt;
+use App\Models\Payment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,6 +20,7 @@ class DebtController extends Controller
     {
         $debts = $request->user()
             ->debts()
+            ->with('payments')
             ->latest()
             ->get()
             ->map(fn (Debt $debt) => [
@@ -30,6 +32,9 @@ class DebtController extends Controller
                 'due_date' => $debt->due_date?->format('Y-m-d'),
                 'is_paid' => $debt->is_paid,
                 'created_at' => $debt->created_at->format('Y-m-d'),
+                'total_paid' => $debt->totalPaid(),
+                'remaining_balance' => $debt->remainingBalance(),
+                'payment_count' => $debt->payments->count(),
             ]);
 
         $summary = [
@@ -76,6 +81,19 @@ class DebtController extends Controller
     {
         $this->authorize('view', $debt);
 
+        $debt->load('payments');
+
+        $payments = $debt->payments()
+            ->latest('payment_date')
+            ->get()
+            ->map(fn (Payment $payment) => [
+                'id' => $payment->id,
+                'amount' => $payment->amount,
+                'payment_date' => $payment->payment_date->format('Y-m-d'),
+                'notes' => $payment->notes,
+                'created_at' => $payment->created_at->format('Y-m-d H:i'),
+            ]);
+
         return Inertia::render('debts/Show', [
             'debt' => [
                 'id' => $debt->id,
@@ -87,7 +105,10 @@ class DebtController extends Controller
                 'is_paid' => $debt->is_paid,
                 'created_at' => $debt->created_at->format('Y-m-d H:i'),
                 'updated_at' => $debt->updated_at->format('Y-m-d H:i'),
+                'total_paid' => $debt->totalPaid(),
+                'remaining_balance' => $debt->remainingBalance(),
             ],
+            'payments' => $payments,
         ]);
     }
 

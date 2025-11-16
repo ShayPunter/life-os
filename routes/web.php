@@ -16,6 +16,7 @@ Route::get('dashboard', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('debts', App\Http\Controllers\DebtController::class);
+    Route::resource('debts.payments', App\Http\Controllers\PaymentController::class);
 });
 
 require __DIR__.'/settings.php';
