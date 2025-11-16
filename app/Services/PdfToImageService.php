@@ -37,7 +37,14 @@ class PdfToImageService
                     ->setCompressionQuality(85)
                     ->saveImage($outputPath);
 
-                return file_exists($outputPath);
+                // Validate single page image
+                if (file_exists($outputPath)) {
+                    $this->validateImageForGroq($outputPath);
+
+                    return true;
+                }
+
+                return false;
             }
 
             // Convert all pages to individual images
@@ -70,6 +77,11 @@ class PdfToImageService
             }
             if (is_dir($tempDir)) {
                 rmdir($tempDir);
+            }
+
+            // Validate the stitched image doesn't exceed Groq's limits
+            if ($success && file_exists($outputPath)) {
+                $this->validateImageForGroq($outputPath);
             }
 
             return $success;
@@ -187,6 +199,33 @@ class PdfToImageService
             Log::error('Imagick stitching failed: '.$e->getMessage());
 
             return false;
+        }
+    }
+
+    /**
+     * Validate image meets Groq API requirements.
+     *
+     * @throws \Exception if image exceeds limits
+     */
+    protected function validateImageForGroq(string $imagePath): void
+    {
+        // Check file size (Groq has a 4MB limit for base64 encoded images)
+        $fileSize = filesize($imagePath);
+        if ($fileSize > 3 * 1024 * 1024) { // 3MB to be safe with base64 overhead
+            throw new \Exception('Combined PDF image is too large ('.round($fileSize / 1024 / 1024, 1).'MB). Maximum size is 3MB. Try a PDF with fewer pages or lower resolution.');
+        }
+
+        // Check resolution (Groq has a 33 megapixel limit)
+        $imageInfo = getimagesize($imagePath);
+        if ($imageInfo !== false) {
+            [$width, $height] = $imageInfo;
+            $megapixels = ($width * $height) / 1000000;
+
+            if ($megapixels > 33) {
+                throw new \Exception('Combined PDF image resolution is too high ('.round($megapixels, 1).' megapixels). Maximum is 33 megapixels. Try a PDF with fewer pages or lower resolution.');
+            }
+
+            Log::info("PDF converted to image: {$width}x{$height} ({$megapixels}MP, ".round($fileSize / 1024).'KB)');
         }
     }
 
