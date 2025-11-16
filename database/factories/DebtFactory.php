@@ -18,12 +18,12 @@ class DebtFactory extends Factory
     {
         return [
             'user_id' => \App\Models\User::factory(),
-            'debtor_name' => fake()->name(),
-            'amount' => fake()->randomFloat(2, 10, 10000),
-            'type' => fake()->randomElement(['owed_to_me', 'i_owe']),
-            'description' => fake()->optional()->sentence(),
-            'due_date' => fake()->optional()->dateTimeBetween('now', '+1 year'),
-            'is_paid' => fake()->boolean(30),
+            'debtor_name' => $this->faker->name(),
+            'amount' => $this->faker->randomFloat(2, 10, 10000),
+            'type' => $this->faker->randomElement(['owed_to_me', 'i_owe']),
+            'description' => $this->faker->optional()->sentence(),
+            'due_date' => $this->faker->optional()->dateTimeBetween('now', '+1 year'),
+            'is_paid' => $this->faker->boolean(30),
         ];
     }
 
