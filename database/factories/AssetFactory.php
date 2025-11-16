@@ -39,6 +39,7 @@ class AssetFactory extends Factory
             'exchange_rate' => null,
             'uses' => $this->faker->numberBetween(0, 100),
             'hours' => $this->faker->randomFloat(2, 0, 200),
+            'tracking_type' => $this->faker->randomElement(['uses', 'hours']),
             'purchased_at' => $this->faker->dateTimeBetween('-2 years', 'now'),
         ];
     }

@@ -25,6 +25,7 @@ class Asset extends Model
         'exchange_rate',
         'uses',
         'hours',
+        'tracking_type',
         'purchased_at',
     ];
 

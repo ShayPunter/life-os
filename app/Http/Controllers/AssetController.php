@@ -37,6 +37,7 @@ class AssetController extends Controller
                 'cost' => $asset->cost,
                 'uses' => $asset->uses,
                 'hours' => $asset->hours,
+                'tracking_type' => $asset->tracking_type,
                 'cost_per_use' => $asset->costPerUse(),
                 'cost_per_hour' => $asset->costPerHour(),
                 'purchased_at' => $asset->purchased_at->format('Y-m-d'),

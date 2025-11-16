@@ -28,6 +28,7 @@ class StoreAssetRequest extends FormRequest
             'original_cost' => ['nullable', 'numeric', 'min:0.01', 'required_with:original_currency'],
             'original_currency' => ['nullable', 'string', 'size:3', 'in:GBP,EUR,CZK,USD', 'required_with:original_cost'],
             'exchange_rate' => ['nullable', 'numeric', 'min:0'],
+            'tracking_type' => ['required', 'string', 'in:uses,hours'],
             'purchased_at' => ['required', 'date'],
         ];
     }
