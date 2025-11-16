@@ -4,6 +4,7 @@ namespace App\Services;
 
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class GroqService
 {
@@ -85,6 +86,47 @@ class GroqService
             Log::error('Groq API Error: '.$e->getMessage());
 
             throw new \Exception('Failed to analyze receipt: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Analyze a receipt image from S3 and extract expense information.
+     *
+     * @param  string  $s3Path  Path to the receipt image in S3
+     * @param  string  $disk  The storage disk to use (default: 's3')
+     * @return array{amount: float, description: string, category: string}
+     */
+    public function analyzeReceiptFromS3(string $s3Path, string $disk = 's3'): array
+    {
+        // Download the file from S3 to a temporary location
+        $tempPath = storage_path('app/temp/'.basename($s3Path));
+        $tempDir = dirname($tempPath);
+
+        if (! is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        try {
+            // Download from S3
+            $fileContents = Storage::disk($disk)->get($s3Path);
+            file_put_contents($tempPath, $fileContents);
+
+            // Analyze the image
+            $result = $this->analyzeReceipt($tempPath);
+
+            // Clean up temp file
+            if (file_exists($tempPath)) {
+                unlink($tempPath);
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            // Clean up temp file if it exists
+            if (file_exists($tempPath)) {
+                unlink($tempPath);
+            }
+
+            throw $e;
         }
     }
 }

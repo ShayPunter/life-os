@@ -6,10 +6,12 @@ use App\Http\Requests\StoreExpenseRequest;
 use App\Http\Requests\UpdateExpenseRequest;
 use App\Models\Expense;
 use App\Services\GroqService;
+use App\Services\ImageCompressionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,6 +22,7 @@ class ExpenseController extends Controller
      */
     public function __construct(
         protected GroqService $groqService,
+        protected ImageCompressionService $compressionService,
     ) {}
 
     /**
@@ -71,7 +74,7 @@ class ExpenseController extends Controller
         $data['user_id'] = $request->user()->id;
 
         if ($request->hasFile('receipt')) {
-            $receiptPath = $request->file('receipt')->store('receipts', 'public');
+            $receiptPath = $this->processAndUploadReceipt($request->file('receipt'));
             $data['receipt_path'] = $receiptPath;
         }
 
@@ -92,10 +95,10 @@ class ExpenseController extends Controller
         if ($request->hasFile('receipt')) {
             // Delete old receipt if it exists
             if ($expense->receipt_path) {
-                Storage::disk('public')->delete($expense->receipt_path);
+                $this->deleteReceiptFromStorage($expense->receipt_path);
             }
 
-            $receiptPath = $request->file('receipt')->store('receipts', 'public');
+            $receiptPath = $this->processAndUploadReceipt($request->file('receipt'));
             $data['receipt_path'] = $receiptPath;
         }
 
@@ -113,7 +116,7 @@ class ExpenseController extends Controller
 
         // Delete receipt file if it exists
         if ($expense->receipt_path) {
-            Storage::disk('public')->delete($expense->receipt_path);
+            $this->deleteReceiptFromStorage($expense->receipt_path);
         }
 
         $expense->delete();
@@ -132,13 +135,29 @@ class ExpenseController extends Controller
 
         try {
             $file = $request->file('receipt');
-            $tempPath = $file->store('temp', 'local');
-            $fullPath = Storage::disk('local')->path($tempPath);
 
-            $result = $this->groqService->analyzeReceipt($fullPath);
+            // Store temporarily for compression
+            $tempUploadPath = $file->store('temp', 'local');
+            $tempUploadFullPath = Storage::disk('local')->path($tempUploadPath);
 
-            // Clean up temp file
-            Storage::disk('local')->delete($tempPath);
+            // Compress the image
+            $tempCompressedPath = storage_path('app/temp/compressed_'.basename($tempUploadPath));
+            $this->compressionService->compress($tempUploadFullPath, $tempCompressedPath);
+
+            // Upload to S3
+            $s3Path = $this->uploadToS3($tempCompressedPath, $file->getClientOriginalExtension());
+
+            // Analyze using Groq
+            $result = $this->groqService->analyzeReceiptFromS3($s3Path, $this->getStorageDisk());
+
+            // Clean up temp files
+            Storage::disk('local')->delete($tempUploadPath);
+            if (file_exists($tempCompressedPath)) {
+                unlink($tempCompressedPath);
+            }
+
+            // Delete the S3 file after analysis (we'll upload again when saving)
+            Storage::disk($this->getStorageDisk())->delete($s3Path);
 
             return response()->json([
                 'success' => true,
@@ -150,10 +169,75 @@ class ExpenseController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
+            // Clean up any temp files
+            if (isset($tempUploadPath)) {
+                Storage::disk('local')->delete($tempUploadPath);
+            }
+            if (isset($tempCompressedPath) && file_exists($tempCompressedPath)) {
+                unlink($tempCompressedPath);
+            }
+            if (isset($s3Path)) {
+                Storage::disk($this->getStorageDisk())->delete($s3Path);
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 422);
         }
+    }
+
+    /**
+     * Process and upload a receipt image.
+     */
+    protected function processAndUploadReceipt(\Illuminate\Http\UploadedFile $file): string
+    {
+        // Store temporarily
+        $tempPath = $file->store('temp', 'local');
+        $tempFullPath = Storage::disk('local')->path($tempPath);
+
+        // Compress the image
+        $tempCompressedPath = storage_path('app/temp/compressed_'.basename($tempPath));
+        $this->compressionService->compress($tempFullPath, $tempCompressedPath);
+
+        // Upload to S3
+        $s3Path = $this->uploadToS3($tempCompressedPath, $file->getClientOriginalExtension());
+
+        // Clean up temp files
+        Storage::disk('local')->delete($tempPath);
+        if (file_exists($tempCompressedPath)) {
+            unlink($tempCompressedPath);
+        }
+
+        return $s3Path;
+    }
+
+    /**
+     * Upload a file to S3.
+     */
+    protected function uploadToS3(string $localPath, string $extension): string
+    {
+        $filename = 'receipts/'.Str::uuid().'.'.$extension;
+        $fileContents = file_get_contents($localPath);
+
+        Storage::disk($this->getStorageDisk())->put($filename, $fileContents, 'public');
+
+        return $filename;
+    }
+
+    /**
+     * Delete a receipt from storage.
+     */
+    protected function deleteReceiptFromStorage(string $path): void
+    {
+        Storage::disk($this->getStorageDisk())->delete($path);
+    }
+
+    /**
+     * Get the storage disk to use for receipts.
+     */
+    protected function getStorageDisk(): string
+    {
+        return config('filesystems.default') === 's3' ? 's3' : 'public';
     }
 }
