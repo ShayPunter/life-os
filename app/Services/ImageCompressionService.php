@@ -51,7 +51,6 @@ class ImageCompressionService
             Log::info('Image compressed successfully', [
                 'source' => $sourcePath,
                 'destination' => $destinationPath,
-                'compressions_this_month' => Tinify::compressionCount(),
             ]);
 
             return true;
@@ -75,18 +74,6 @@ class ImageCompressionService
             Log::error('TinyPNG Error: '.$e->getMessage());
 
             throw new \Exception('Image compression failed: '.$e->getMessage());
-        }
-    }
-
-    /**
-     * Get the number of compressions used this month.
-     */
-    public function getCompressionCount(): ?int
-    {
-        try {
-            return Tinify::compressionCount();
-        } catch (\Exception $e) {
-            return null;
         }
     }
 }
