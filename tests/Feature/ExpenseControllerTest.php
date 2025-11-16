@@ -294,7 +294,7 @@ class ExpenseControllerTest extends TestCase
 
         // Mock the GroqService
         $this->mock(GroqService::class, function ($mock) {
-            $mock->shouldReceive('analyzeReceiptFromS3')
+            $mock->shouldReceive('analyzeReceipt')
                 ->once()
                 ->andReturn([
                     'amount' => 50.00,
@@ -364,7 +364,7 @@ class ExpenseControllerTest extends TestCase
 
         // Mock the GroqService
         $this->mock(GroqService::class, function ($mock) {
-            $mock->shouldReceive('analyzeReceiptFromS3')
+            $mock->shouldReceive('analyzeReceipt')
                 ->once()
                 ->andReturn([
                     'amount' => 3000.00,
@@ -418,7 +418,7 @@ class ExpenseControllerTest extends TestCase
 
         // Mock the GroqService
         $this->mock(GroqService::class, function ($mock) {
-            $mock->shouldReceive('analyzeReceiptFromS3')
+            $mock->shouldReceive('analyzeReceipt')
                 ->once()
                 ->andReturn([
                     'amount' => 100.00,

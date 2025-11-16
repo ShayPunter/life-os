@@ -141,7 +141,7 @@ class ExpenseController extends Controller
             $file = $request->file('receipt');
             $isPdf = $this->isPdf($file);
 
-            // Store temporarily
+            // Store temporarily locally
             $tempUploadPath = $file->store('temp', 'local');
             $tempUploadFullPath = Storage::disk('local')->path($tempUploadPath);
 
@@ -161,19 +161,8 @@ class ExpenseController extends Controller
             $tempCompressedPath = storage_path('app/temp/compressed_'.basename($tempUploadFullPath));
             $this->compressionService->compress($tempUploadFullPath, $tempCompressedPath);
 
-            // Upload to S3
-            $s3Path = $this->uploadToS3($tempCompressedPath, 'jpg');
-
-            // Clean up temp files
-            if (file_exists($tempCompressedPath)) {
-                unlink($tempCompressedPath);
-            }
-            if ($isPdf && isset($pdfConvertedPath) && file_exists($pdfConvertedPath)) {
-                unlink($pdfConvertedPath);
-            }
-
-            // Analyze using Groq
-            $result = $this->groqService->analyzeReceiptFromS3($s3Path, $this->getStorageDisk());
+            // Analyze directly from the local compressed file
+            $result = $this->groqService->analyzeReceipt($tempCompressedPath);
 
             // Convert currency to EUR
             $converted = $this->currencyService->convertToEur(
@@ -182,10 +171,13 @@ class ExpenseController extends Controller
             );
 
             // Clean up temp files
+            if (file_exists($tempCompressedPath)) {
+                unlink($tempCompressedPath);
+            }
+            if ($isPdf && isset($pdfConvertedPath) && file_exists($pdfConvertedPath)) {
+                unlink($pdfConvertedPath);
+            }
             Storage::disk('local')->delete($tempUploadPath);
-
-            // Delete the S3 file after analysis (we'll upload again when saving)
-            Storage::disk($this->getStorageDisk())->delete($s3Path);
 
             return response()->json([
                 'success' => true,
@@ -209,9 +201,6 @@ class ExpenseController extends Controller
             }
             if (isset($pdfConvertedPath) && file_exists($pdfConvertedPath)) {
                 unlink($pdfConvertedPath);
-            }
-            if (isset($s3Path)) {
-                Storage::disk($this->getStorageDisk())->delete($s3Path);
             }
 
             return response()->json([
