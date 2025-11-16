@@ -26,7 +26,7 @@ interface Props {
     debt: Debt;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
