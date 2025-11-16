@@ -24,9 +24,9 @@ class StoreAssetRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'cost' => ['required', 'numeric', 'min:0.01'],
-            'original_cost' => ['nullable', 'numeric', 'min:0.01'],
-            'original_currency' => ['nullable', 'string', 'size:3', 'in:GBP,EUR,CZK,USD'],
+            'cost' => ['required_without_all:original_cost,original_currency', 'nullable', 'numeric', 'min:0.01'],
+            'original_cost' => ['nullable', 'numeric', 'min:0.01', 'required_with:original_currency'],
+            'original_currency' => ['nullable', 'string', 'size:3', 'in:GBP,EUR,CZK,USD', 'required_with:original_cost'],
             'exchange_rate' => ['nullable', 'numeric', 'min:0'],
             'purchased_at' => ['required', 'date'],
         ];
