@@ -75,7 +75,7 @@ class PaymentController extends Controller
 
         $debt->payments()->create($request->validated());
 
-        return to_route('debts.payments.index', $debt)->with('status', 'Payment recorded successfully.');
+        return to_route('debts.show', $debt)->with('status', 'Payment recorded successfully.');
     }
 
     /**
@@ -141,7 +141,7 @@ class PaymentController extends Controller
 
         $payment->update($request->validated());
 
-        return to_route('debts.payments.index', $debt)->with('status', 'Payment updated successfully.');
+        return to_route('debts.show', $debt)->with('status', 'Payment updated successfully.');
     }
 
     /**
@@ -155,6 +155,6 @@ class PaymentController extends Controller
 
         $payment->delete();
 
-        return to_route('debts.payments.index', $debt)->with('status', 'Payment deleted successfully.');
+        return to_route('debts.show', $debt)->with('status', 'Payment deleted successfully.');
     }
 }
