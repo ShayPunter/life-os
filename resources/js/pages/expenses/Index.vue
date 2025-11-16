@@ -294,7 +294,7 @@ const canAnalyzeWithAI = computed(() => {
                             <div class="grid gap-2">
                                 <Label>Receipt (Optional)</Label>
                                 <p class="text-sm text-muted-foreground">
-                                    Upload an image or PDF for AI-powered expense analysis
+                                    Upload an image or PDF (all pages will be analyzed) for AI-powered expense analysis
                                 </p>
                                 <div class="flex flex-col gap-2">
                                     <Input
