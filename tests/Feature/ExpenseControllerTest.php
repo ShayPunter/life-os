@@ -393,6 +393,60 @@ class ExpenseControllerTest extends TestCase
         ]);
     }
 
+    public function test_analyze_receipt_accepts_usd_currency(): void
+    {
+        Storage::fake('local');
+        Storage::fake('s3');
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        // Mock the GroqService
+        $this->mock(GroqService::class, function ($mock) {
+            $mock->shouldReceive('analyzeReceiptFromS3')
+                ->once()
+                ->andReturn([
+                    'amount' => 100.00,
+                    'currency' => 'USD',
+                    'description' => 'Electronics',
+                    'category' => 'Shopping',
+                ]);
+        });
+
+        // Mock the CurrencyConversionService
+        $this->mock(CurrencyConversionService::class, function ($mock) {
+            $mock->shouldReceive('convertToEur')
+                ->once()
+                ->with(100.00, 'USD')
+                ->andReturn([
+                    'amount_eur' => 92.50,
+                    'original_amount' => 100.00,
+                    'original_currency' => 'USD',
+                    'exchange_rate' => 0.925,
+                ]);
+        });
+
+        $file = UploadedFile::fake()->image('receipt.jpg');
+
+        $response = $this->postJson(route('expenses.analyze-receipt'), [
+            'receipt' => $file,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'data' => [
+                'amount' => 92.50,
+                'original_amount' => 100.00,
+                'original_currency' => 'USD',
+                'exchange_rate' => 0.925,
+                'description' => 'Electronics',
+                'category' => 'Shopping',
+            ],
+        ]);
+    }
+
     public function test_deleting_expense_removes_receipt_file(): void
     {
         Storage::fake('public');
