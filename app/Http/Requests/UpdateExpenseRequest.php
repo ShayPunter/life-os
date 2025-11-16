@@ -26,7 +26,7 @@ class UpdateExpenseRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'date' => ['required', 'date'],
             'category' => ['nullable', 'string', 'max:255'],
-            'receipt' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'receipt' => ['nullable', 'file', 'mimes:jpeg,jpg,png,webp,pdf', 'max:5120'],
         ];
     }
 
@@ -41,8 +41,9 @@ class UpdateExpenseRequest extends FormRequest
             'amount.required' => 'Please enter the expense amount.',
             'amount.min' => 'The amount must be greater than zero.',
             'date.required' => 'Please select the expense date.',
-            'receipt.image' => 'The receipt must be an image file.',
-            'receipt.max' => 'The receipt image must not exceed 5MB.',
+            'receipt.file' => 'The receipt must be a valid file.',
+            'receipt.mimes' => 'The receipt must be a JPEG, PNG, WebP, or PDF file.',
+            'receipt.max' => 'The receipt file must not exceed 5MB.',
         ];
     }
 }
