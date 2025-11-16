@@ -323,18 +323,22 @@ class AssetControllerTest extends TestCase
 
         $currencies = ['GBP', 'USD', 'CZK'];
 
-        foreach ($currencies as $currency) {
-            $this->mock(CurrencyConversionService::class, function ($mock) use ($currency) {
+        // Mock the currency service to expect 3 calls (one for each currency)
+        $this->mock(CurrencyConversionService::class, function ($mock) use ($currencies) {
+            foreach ($currencies as $currency) {
                 $mock->shouldReceive('convertToEur')
                     ->once()
+                    ->with(85.00, $currency)
                     ->andReturn([
                         'amount_eur' => 100.00,
                         'original_amount' => 85.00,
                         'original_currency' => $currency,
                         'exchange_rate' => 1.176,
                     ]);
-            });
+            }
+        });
 
+        foreach ($currencies as $currency) {
             $response = $this->post(route('assets.store'), [
                 'name' => "Asset in {$currency}",
                 'original_cost' => 85.00,
