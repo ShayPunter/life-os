@@ -24,6 +24,7 @@ class Asset extends Model
         'original_currency',
         'exchange_rate',
         'uses',
+        'hours',
         'purchased_at',
     ];
 
@@ -39,6 +40,7 @@ class Asset extends Model
             'original_cost' => 'decimal:2',
             'exchange_rate' => 'decimal:6',
             'uses' => 'integer',
+            'hours' => 'decimal:2',
             'purchased_at' => 'date',
         ];
     }
@@ -61,5 +63,17 @@ class Asset extends Model
         }
 
         return round($this->cost / $this->uses, 2);
+    }
+
+    /**
+     * Get the cost per hour for this asset.
+     */
+    public function costPerHour(): ?float
+    {
+        if ($this->hours == 0) {
+            return null;
+        }
+
+        return round($this->cost / $this->hours, 2);
     }
 }

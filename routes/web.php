@@ -22,6 +22,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('assets', App\Http\Controllers\AssetController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::post('assets/{asset}/increment-uses', [App\Http\Controllers\AssetController::class, 'incrementUses'])->name('assets.increment-uses');
     Route::post('assets/{asset}/decrement-uses', [App\Http\Controllers\AssetController::class, 'decrementUses'])->name('assets.decrement-uses');
+    Route::post('assets/{asset}/increment-hours', [App\Http\Controllers\AssetController::class, 'incrementHours'])->name('assets.increment-hours');
+    Route::post('assets/{asset}/decrement-hours', [App\Http\Controllers\AssetController::class, 'decrementHours'])->name('assets.decrement-hours');
 });
 
 require __DIR__.'/settings.php';

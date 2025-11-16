@@ -36,7 +36,9 @@ class AssetController extends Controller
                 'description' => $asset->description,
                 'cost' => $asset->cost,
                 'uses' => $asset->uses,
+                'hours' => $asset->hours,
                 'cost_per_use' => $asset->costPerUse(),
+                'cost_per_hour' => $asset->costPerHour(),
                 'purchased_at' => $asset->purchased_at->format('Y-m-d'),
                 'created_at' => $asset->created_at->format('Y-m-d'),
             ]);
@@ -51,6 +53,9 @@ class AssetController extends Controller
             'total_uses' => $request->user()
                 ->assets()
                 ->sum('uses'),
+            'total_hours' => $request->user()
+                ->assets()
+                ->sum('hours'),
         ];
 
         return Inertia::render('assets/Index', [
@@ -145,6 +150,32 @@ class AssetController extends Controller
 
         if ($asset->uses > 0) {
             $asset->decrement('uses');
+        }
+
+        return back();
+    }
+
+    /**
+     * Increment the hours for an asset.
+     */
+    public function incrementHours(Asset $asset): RedirectResponse
+    {
+        $this->authorize('update', $asset);
+
+        $asset->increment('hours', 0.5);
+
+        return back();
+    }
+
+    /**
+     * Decrement the hours for an asset.
+     */
+    public function decrementHours(Asset $asset): RedirectResponse
+    {
+        $this->authorize('update', $asset);
+
+        if ($asset->hours >= 0.5) {
+            $asset->decrement('hours', 0.5);
         }
 
         return back();
