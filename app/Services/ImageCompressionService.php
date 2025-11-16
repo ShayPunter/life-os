@@ -30,6 +30,12 @@ class ImageCompressionService
             throw new \Exception('Source image file not found');
         }
 
+        // Ensure destination directory exists
+        $destinationDir = dirname($destinationPath);
+        if (! is_dir($destinationDir)) {
+            mkdir($destinationDir, 0755, true);
+        }
+
         if (! config('services.tinypng.api_key')) {
             Log::warning('TinyPNG API key not configured. Skipping compression.');
 

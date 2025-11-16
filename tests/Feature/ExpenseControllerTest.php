@@ -276,7 +276,7 @@ class ExpenseControllerTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $response = $this->post(route('expenses.analyze-receipt'), []);
+        $response = $this->postJson(route('expenses.analyze-receipt'), []);
 
         $response->assertStatus(422);
     }
@@ -301,12 +301,8 @@ class ExpenseControllerTest extends TestCase
                 ]);
         });
 
-        // Mock ImageCompressionService
-        $this->mock(ImageCompressionService::class, function ($mock) {
-            $mock->shouldReceive('compress')
-                ->once()
-                ->andReturn(true);
-        });
+        // Don't mock ImageCompressionService - it will fall back to copy without API key
+        // This avoids filesystem vs Storage::fake conflicts
 
         $file = UploadedFile::fake()->image('receipt.jpg');
 
