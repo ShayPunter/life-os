@@ -196,9 +196,11 @@ const handleUpdate = () => {
 };
 
 const handleDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this expense?')) {
-        router.delete(destroy.url(id));
+    if (!confirm('Are you sure you want to delete this expense?')) {
+        return;
     }
+
+    destroy.delete(id);
 };
 
 const openEditDialog = (expense: Expense) => {
