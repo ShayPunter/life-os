@@ -16,6 +16,8 @@ Route::get('dashboard', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('debts', App\Http\Controllers\DebtController::class);
+    Route::resource('expenses', App\Http\Controllers\ExpenseController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::post('expenses/analyze-receipt', [App\Http\Controllers\ExpenseController::class, 'analyzeReceipt'])->name('expenses.analyze-receipt');
     Route::resource('debts.payments', App\Http\Controllers\PaymentController::class);
 });
 

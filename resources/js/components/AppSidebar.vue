@@ -14,7 +14,7 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, DollarSign, Folder, LayoutGrid } from 'lucide-vue-next';
+import { BookOpen, DollarSign, Folder, LayoutGrid, Receipt } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -27,6 +27,11 @@ const mainNavItems: NavItem[] = [
         title: 'Debts',
         href: '/debts',
         icon: DollarSign,
+    },
+    {
+        title: 'Expenses',
+        href: '/expenses',
+        icon: Receipt,
     },
 ];
 

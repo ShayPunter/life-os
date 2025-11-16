@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'groq' => [
+        'api_key' => env('GROQ_API_KEY'),
+    ],
+
+    'tinypng' => [
+        'api_key' => env('TINYPNG_API_KEY'),
+    ],
+
 ];
